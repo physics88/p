@@ -398,12 +398,26 @@
             line-height: 1.15;
         }
 
+        .welcome-intro {
+            max-width: 820px;
+            margin: 0 auto 2.4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
         .welcome-hero p {
-            font-size: clamp(1.05rem, 2vw, 1.25rem);
+            font-size: clamp(1.02rem, 1.8vw, 1.18rem);
             color: var(--text-secondary);
-            max-width: 720px;
-            margin: 0 auto 2.2rem;
-            line-height: 1.6;
+            line-height: 1.68;
+            margin: 0;
+        }
+
+        .welcome-hero p.welcome-cta {
+            font-weight: 700;
+            color: var(--accent-primary);
+            font-size: clamp(1.08rem, 2vw, 1.25rem);
+            margin-top: 0.35rem;
         }
 
         /* Карточки разделов 8 и 9 класс */
@@ -1311,9 +1325,13 @@
     <!-- Экран 1: Приветствие и выбор раздела (8 класс / 9 класс) -->
     <div class="screen active" id="welcomeScreen">
         <div class="welcome-hero">
-            <div class="hero-badge">📚 Полный школьный курс физики • 53 темы с формулами и примерами</div>
-            <h1>Физика: 8 и 9 класс</h1>
-            <p>Наглядные объяснения физических законов, разбор формул, схем и реальных примеров из жизни. Выберите нужный раздел или воспользуйтесь быстрым поиском по темам сверху.</p>
+            <div class="hero-badge">📚 Полный школьный курс физики • 8 и 9 класс</div>
+            <h1>Законы физики: от теории к жизни</h1>
+            <div class="welcome-intro">
+                <p>Физика окружает нас повсюду — в движении транспорта, работе привычных устройств, природных явлениях и повседневных ситуациях. Наш сайт создан, чтобы показать, как действуют её законы в реальной жизни, и помочь разобраться в сложных темах школьной программы.</p>
+                <p>Здесь собраны объяснения физических явлений за 8 и 9 классы. Каждая тема сопровождается основными теоретическими сведениями, примерами из жизни и наглядными изображениями. Материалы изложены доступным языком, чтобы изучение физики стало проще и интереснее.</p>
+                <p class="welcome-cta">Выберите свой класс и начните знакомство с физикой!</p>
+            </div>
 
             <div class="sections-grid">
                 <!-- Раздел 1: 8 класс -->
@@ -1458,20 +1476,7 @@
     const topicImages = APP_DATA.topicImages;
     const summaryTable9 = APP_DATA.summaryTable9;
 
-    // Пользовательские иллюстрации, добавленные в браузере (сохраняются в памяти и при возможности в localStorage)
-    let customTopicImages = {};
-    try {
-        const savedImgs = localStorage.getItem('physics_custom_images_v1');
-        if (savedImgs) {
-            customTopicImages = JSON.parse(savedImgs);
-        }
-    } catch (e) {}
 
-    function saveCustomImages() {
-        try {
-            localStorage.setItem('physics_custom_images_v1', JSON.stringify(customTopicImages));
-        } catch (e) {}
-    }
 
     // ---------- СОСТОЯНИЕ НАВИГАЦИИ ----------
     let currentGrade = '8';
@@ -1771,10 +1776,6 @@
                         <span>🖼</span>
                         <span>Схемы и иллюстрации к теме</span>
                     </div>
-                    <label class="upload-image-label" title="Вы можете прямо сейчас выбрать картинку с устройства для предпросмотра в этой теме">
-                        <span>＋ Добавить картинку</span>
-                        <input type="file" class="upload-image-input" id="topicImageUploadInput" accept="image/*" multiple>
-                    </label>
                 </div>
                 <div class="images-section" id="topicImagesGrid"></div>
             </div>
@@ -1782,28 +1783,6 @@
         `;
 
         renderTopicImagesGrid(topicName);
-
-        const uploadInput = document.getElementById('topicImageUploadInput');
-        if (uploadInput) {
-            uploadInput.addEventListener('change', (e) => {
-                const files = Array.from(e.target.files || []);
-                if (!files.length) return;
-                files.forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        if (!customTopicImages[topicName]) customTopicImages[topicName] = [];
-                        customTopicImages[topicName].push({
-                            name: file.name,
-                            dataUrl: ev.target.result
-                        });
-                        saveCustomImages();
-                        renderTopicImagesGrid(topicName);
-                    };
-                    reader.readAsDataURL(file);
-                });
-                uploadInput.value = '';
-            });
-        }
 
         const prevBtn = document.getElementById('prevTopicBtn');
         if (prevBtn) {
@@ -1830,20 +1809,18 @@
         grid.innerHTML = '';
 
         const predefinedPaths = topicImages[topicName] || [];
-        const userImgs = customTopicImages[topicName] || [];
 
-        if (predefinedPaths.length === 0 && userImgs.length === 0) {
+        if (predefinedPaths.length === 0) {
             const ph = document.createElement('div');
             ph.className = 'image-placeholder';
             ph.innerHTML = `
-                <span class="placeholder-badge">🖼 Место для иллюстрации</span>
-                <span>Картинка будет добавлена позже. Вы также можете нажать «＋ Добавить картинку» выше.</span>
+                <span class="placeholder-badge">🖼 Иллюстрация</span>
+                <span>Изображения к этой теме будут добавлены в папку проекта.</span>
             `;
             grid.appendChild(ph);
             return;
         }
 
-        // Сначала отображаем штатные пути к файлам (как в исходном коде: если файл есть в папке images/ — покажет картинку, если пока нет — аккуратную карточку-заглушку с путём)
         predefinedPaths.forEach(src => {
             const card = document.createElement('div');
             card.className = 'image-card';
@@ -1857,8 +1834,8 @@
             img.addEventListener('error', () => {
                 card.className = 'image-placeholder';
                 card.innerHTML = `
-                    <span class="placeholder-badge">🖼 Слот для иллюстрации</span>
-                    <div>Положите файл в папку проекта или загрузите кнопкой выше:</div>
+                    <span class="placeholder-badge">🖼 Иллюстрация к теме</span>
+                    <div>Файл изображения для папки проекта:</div>
                     <code class="placeholder-path">${src}</code>
                 `;
             });
@@ -1867,40 +1844,6 @@
             cap.className = 'image-card-caption';
             cap.innerHTML = `<span>${src}</span><span>🔍 Увеличить</span>`;
 
-            card.appendChild(img);
-            card.appendChild(cap);
-            grid.appendChild(card);
-        });
-
-        // Пользовательские загруженные картинки
-        userImgs.forEach((item, idx) => {
-            const card = document.createElement('div');
-            card.className = 'image-card';
-
-            const img = document.createElement('img');
-            img.src = item.dataUrl;
-            img.alt = item.name;
-            img.title = item.name;
-            img.addEventListener('click', () => openModal(item.dataUrl));
-
-            const cap = document.createElement('div');
-            cap.className = 'image-card-caption';
-
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = item.name;
-
-            const delBtn = document.createElement('button');
-            delBtn.className = 'remove-custom-img-btn';
-            delBtn.type = 'button';
-            delBtn.textContent = 'Удалить';
-            delBtn.addEventListener('click', () => {
-                customTopicImages[topicName].splice(idx, 1);
-                saveCustomImages();
-                renderTopicImagesGrid(topicName);
-            });
-
-            cap.appendChild(nameSpan);
-            cap.appendChild(delBtn);
             card.appendChild(img);
             card.appendChild(cap);
             grid.appendChild(card);
